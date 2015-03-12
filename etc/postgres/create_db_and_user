@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# create the database and user as given in file 'db.txt'
+# the user has the CREATEDB privilege in order to run tests
+
+db=`awk -F "," '{print $1}' db.txt`
+dbuser=`awk -F "," '{print $2}' db.txt`
+if [ ! $db ]; then
+    echo "'db.txt' not found or is empty"
+    exit 1
+fi
+if [ ! $dbuser ]; then
+    dbuser=$db
+fi
+dbpass=""
+
+# create user
+sql="SELECT count(1) FROM pg_catalog.pg_user WHERE usename = '$dbuser';"
+exists=`psql -c "$sql" | sed -n "s/^\\s*\([0-9]*\)\\s*$/\1/p"`
+if [ $exists != "0" ]; then
+    echo "database user $dbuser already exists"
+else
+    dbpass=`python -c "import random;import string;print(''.join(random.sample(string.ascii_lowercase, 10)))"`
+    psql -c "CREATE USER $dbuser WITH CREATEDB PASSWORD '$dbpass'"
+fi
+
+# create db
+sql="SELECT count(1) FROM pg_catalog.pg_database WHERE datname = '$db';"
+exists=`psql -c "$sql" | sed -n "s/^\\s*\([0-9]*\)\\s*$/\1/p"`
+if [ $exists != "0" ]; then
+    echo "database $db already exists"
+else
+    createdb -T template_postgis --owner $dbuser $db
+fi
+
+echo ""
+echo "DATABASES = {"
+echo "    'default': {"
+echo "        'ENGINE': 'django.db.backends.postgresql_psycopg2',"
+echo "        'NAME': '$db',"
+echo "        'USER': '$dbuser',"
+echo "        'PASSWORD': '$dbpass',"
+echo "        'HOST': 'localhost',"
+echo "        'PORT': '',"
+echo "    }"
+echo "}"
+echo ""

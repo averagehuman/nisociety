@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# delete and recreate a postgres database, eg. sudo -u postgres ./pgreset
+
+db=`awk -F "," '{print $1}' db.txt`
+sql="SELECT count(1) FROM pg_catalog.pg_database WHERE datname = '$db';"
+exists=`psql -c "$sql" | sed -n "s/^\\s*\([0-9]*\)\\s*$/\1/p"`
+if [ $exists != "0" ]; then
+    echo "::: dropping database $db"
+    psql -c "drop database $db;"
+fi
+./create_db_and_user

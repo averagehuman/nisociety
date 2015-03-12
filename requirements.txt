@@ -1,0 +1,15 @@
+django
+south
+psycopg2
+lxml
+gtfs
+python-geohash
+PyYAML
+python-memcached
+#gdal
+requests
+-e git+ssh://git@github.com/jezdez/django_compressor.git@master#egg=django_compressor
+-e svn+http://googletransitdatafeed.googlecode.com/svn/trunk/python/#egg=transitfeed
+-e git+ssh://git@github.com/devopsni/mapit.git@nisoc#egg=django-mapit
+
+
